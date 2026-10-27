@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const ROOT = 'C:/Users/elysia/.dsh/chat-digest';
+const ROOT = path.join(__dirname, '..');
 const TOKEN = process.env.GH_TOKEN;
 const REPO = process.env.REPO_NAME || 'daiban';
 const DESC = process.env.REPO_DESC || '待办 —— 把微信群聊自动总结成要点的本地小软件';
