@@ -31,6 +31,40 @@ function loadConfig() {
   writeJson(CONFIG, cfg);
   return cfg;
 }
+/** 标题指纹：去掉空白和标点、转小写，用来判断是不是同一条要点 */
+function normalizeKey(text) {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/[\s\u3000]+/g, '')
+    .replace(/[，。、！？：；,.!?:;'"“”‘’()（）【】\[\]<>《》\-—_\u002f\\|~·…]/g, '');
+}
+
+/** 字符集合相似度：抓「提交证件复印件」和「证件复印件提交」这种打乱语序的同一条 */
+function keySimilarity(a, b) {
+  const setA = new Set(String(a || '').split(''));
+  const setB = new Set(String(b || '').split(''));
+  if (!setA.size || !setB.size) return 0;
+  let hit = 0;
+  for (const ch of setA) if (setB.has(ch)) hit++;
+  return hit / Math.max(setA.size, setB.size);
+}
+
+/** 两条要点算不算同一件事：完全相同 / 互相包含（都≥3字）/ 字符相似度≥0.7（都≥4字） */
+function sameTitle(a, b) {
+  const key = normalizeKey(a);
+  const other = normalizeKey(b);
+  if (!key || !other) return false;
+  if (key === other) return true;
+  if (key.length >= 3 && other.length >= 3 && (key.includes(other) || other.includes(key))) return true;
+  if (key.length >= 4 && other.length >= 4 && keySimilarity(key, other) >= 0.7) return true;
+  return false;
+}
+
+/** 标题是不是已经存在（用来去重：同一件事只留一条） */
+function alreadyHave(title, titles) {
+  return (titles || []).some((t) => sameTitle(title, t));
+}
+
 function loadPoints() {
   const list = readJson(POINTS, []);
   return Array.isArray(list) ? list : [];
@@ -160,7 +194,7 @@ const AI_SYSTEM = [
   '忽略纯表情、接龙、起哄；同一件事合并成一条；没有实质内容就返回空数组。',
 ].join('\n');
 
-async function aiSummarize(cfg, sectionText, groupName) {
+async function aiSummarize(cfg, sectionText, groupName, knownTitles) {
   const apiBase = String(cfg.apiBase || 'https://api.deepseek.com').replace(/\/$/, '');
   const res = await fetch(apiBase + '/chat/completions', {
     method: 'POST',
@@ -172,7 +206,13 @@ async function aiSummarize(cfg, sectionText, groupName) {
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: AI_SYSTEM },
-        { role: 'user', content: '群聊：' + groupName + '\n\n' + sectionText },
+        {
+          role: 'user',
+          content: ((knownTitles && knownTitles.length)
+            ? '（注意：下面这些是要点列表里已经有的，同一件事不要再重复输出，也不要换个说法重写：'
+              + knownTitles.join('、') + '）\n\n'
+            : '') + '群聊：' + groupName + '\n\n' + sectionText,
+        },
       ],
     }),
   });
@@ -221,11 +261,14 @@ ipcMain.handle('digest:run', async (_e, days) => {
     const blocks = text.split(/\n## /).slice(1);
     const all = [];
     const errors = [];
+    // 已经把有的要点标题：既提示 AI 别重复，生成完也按这个去重
+    const existingTitles = loadPoints().map((p) => p.title).filter(Boolean);
+    const knownTitles = existingTitles.slice(-40);
     for (const block of blocks) {
       const nl = block.indexOf('\n');
       const groupName = block.slice(0, nl < 0 ? block.length : nl).replace(/（.*$/, '').trim();
       try {
-        const items = await aiSummarize(cfg, block.slice(0, 60000), groupName);
+        const items = await aiSummarize(cfg, block.slice(0, 60000), groupName, knownTitles);
         all.push(...items);
       } catch (err) {
         errors.push(groupName + '：' + String(err && err.message || err).slice(0, 160));
@@ -234,13 +277,23 @@ ipcMain.handle('digest:run', async (_e, days) => {
     if (!all.length) {
       return { ok: false, error: errors.length ? errors.join('；') : '这次没总结出要点（可能是这段时间没实质内容）' };
     }
+    // 去重：跟列表里已有的重复就丢掉；同一批里撞车的也只留第一条
+    const fresh = [];
+    let skipped = 0;
+    for (const item of all) {
+      if (alreadyHave(item.title, existingTitles.concat(fresh.map((f) => f.title)))) { skipped++; continue; }
+      fresh.push(item);
+    }
+    if (!fresh.length) {
+      return { ok: true, added: 0, skipped, log: '这次总结出来的 ' + skipped + ' 条都是已经有的，已全部跳过喵' };
+    }
     const ptsFile = path.join(inbox.trim() || DATA, '要点.json');
-    fs.writeFileSync(ptsFile, JSON.stringify(all, null, 2), 'utf8');
+    fs.writeFileSync(ptsFile, JSON.stringify(fresh, null, 2), 'utf8');
     const commitOut = require('child_process').execFileSync(process.execPath, [
       script, 'commit', '--inbox', inbox.trim(), '--points', ptsFile,
     ], { encoding: 'utf8', timeout: 120000, windowsHide: true, cwd: ROOT });
     fs.writeFileSync(path.join(DATA, 'pending.json'), JSON.stringify({ done: true, at: new Date().toISOString() }, null, 2), 'utf8');
-    return { ok: true, added: all.length, log: (commitOut + '\n' + errors.join('\n')).slice(-2000) };
+    return { ok: true, added: fresh.length, skipped, log: (commitOut + '\n' + errors.join('\n')).slice(-2000) };
   } catch (error) {
     const msg = String((error && error.stdout) || '') + String((error && error.message) || error);
     return { ok: false, error: msg.slice(-2000) };

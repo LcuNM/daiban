@@ -166,7 +166,7 @@ select:focus, input:focus, textarea:focus {
 
 .gen-wrap {
   position: relative; display: flex;
-  border-radius: 99px; overflow: hidden;
+  border-radius: 99px;
   background: var(--brand);
   box-shadow: 0 6px 16px rgba(74, 108, 247, .28);
   transition: transform .16s var(--ease), box-shadow .22s var(--ease);
@@ -175,6 +175,7 @@ select:focus, input:focus, textarea:focus {
 .gen {
   border: none; background: transparent; color: #fff;
   padding: 9px 13px; font-family: inherit; font-size: 13px; font-weight: 600;
+  border-radius: 99px 0 0 99px;
   cursor: pointer;
   transition: background .2s var(--ease);
 }
@@ -182,6 +183,7 @@ select:focus, input:focus, textarea:focus {
 .gen:disabled { opacity: .65; cursor: default; }
 .gen-arrow {
   width: 26px; border: none; background: transparent; color: #fff;
+  border-radius: 0 99px 99px 0;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   transition: background .2s var(--ease);

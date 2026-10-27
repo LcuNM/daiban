@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:1146px; height:717px; overflow:hidden; background:#070A16; }
+  body { font-family:"Microsoft YaHei","Microsoft YaHei UI",sans-serif; -webkit-font-smoothing:antialiased; }
+  .stage { position:relative; width:1146px; height:717px; overflow:hidden;
+    background:linear-gradient(135deg,#0A0F22 0%,#111A3C 45%,#1A2350 100%); }
+  .glow { position:absolute; border-radius:50%; filter:blur(70px); opacity:.55; }
+  .g1 { width:520px; height:520px; left:-150px; top:-170px; background:#2B4BFF; }
+  .g2 { width:460px; height:460px; right:-40px; top:80px; background:#1FB6FF; opacity:.35; }
+  .g3 { width:380px; height:380px; left:280px; bottom:-200px; background:#7A3BFF; opacity:.30; }
+  .grid { position:absolute; inset:0; opacity:.09;
+    background-image:linear-gradient(rgba(255,255,255,.7) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.7) 1px,transparent 1px);
+    background-size:60px 60px; }
+  .halo { position:absolute; right:60px; top:60px; width:520px; height:600px; border-radius:50%;
+    background:radial-gradient(circle,rgba(90,150,255,.45) 0%,rgba(90,150,255,.12) 45%,rgba(90,150,255,0) 70%); filter:blur(20px); }
+  .hero { position:absolute; right:52px; bottom:0; height:682px; z-index:4; }
+  .hero img { height:100%; display:block; filter:drop-shadow(0 18px 40px rgba(3,8,26,.55)); }
+  .left { position:absolute; left:66px; top:146px; width:600px; z-index:6; }
+  .mark { display:inline-flex; align-items:center; gap:10px; font-size:19px; color:#7A9BFF; letter-spacing:1px; }
+  .mark i { display:block; width:34px; height:3px; background:#4C7DFF; border-radius:2px; }
+  h1 { margin-top:20px; font-size:66px; line-height:1.16; font-weight:700; color:#fff; letter-spacing:1px; }
+  h1 em { font-style:normal; color:#6E9BFF; }
+  .sub { margin-top:20px; font-size:22px; color:#9CA9C8; letter-spacing:.5px; line-height:1.6; }
+  .tags { margin-top:28px; display:flex; gap:10px; }
+  .tag { font-size:16px; color:#B9C6E6; border:1px solid rgba(120,160,255,.35); border-radius:999px; padding:6px 15px; }
+  .by { position:absolute; left:66px; bottom:52px; display:flex; align-items:center; gap:12px; z-index:6; }
+  .by .b1 { font-size:17px; color:#8FA0C8; letter-spacing:1px; }
+  .by .b2 { font-size:15px; color:#5D6B92; }
+  .panel { position:absolute; right:150px; top:96px; width:430px; height:322px; border-radius:12px; overflow:hidden;
+    background:#fff; background-image:url('out/main.png'); background-size:186% auto; background-position:0% 0%;
+    box-shadow:0 24px 60px rgba(3,8,26,.55), 0 0 0 1px rgba(255,255,255,.14);
+    transform:rotate(-4deg); opacity:.92; z-index:2; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="glow g1"></div><div class="glow g2"></div><div class="glow g3"></div>
+  <div class="grid"></div>
+  <div class="halo"></div>
+  <div class="panel"></div>
+  <div class="hero"><img src="out/whale.png" alt=""></div>
+  <div class="left">
+    <div class="mark"><i></i><span>大肥鱼 · 待办 chat-digest</span></div>
+    <h1>把群聊<br><em>变成要点</em></h1>
+    <div class="sub">一键总结微信群聊 · 自动拎出通知和待办<br>全程本地跑完就删，只留要点</div>
+    <div class="tags"><span class="tag">本地运行</span><span class="tag">开源</span><span class="tag">每天自动</span></div>
+  </div>
+  <div class="by"><span class="b1">大肥鱼 出品</span><span class="b2">· 代码在 GitHub</span></div>
+</div>
+</body>
+</html>

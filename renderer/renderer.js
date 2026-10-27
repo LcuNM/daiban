@@ -408,7 +408,10 @@ async function runDigest(days) {
       status.textContent = res.needsKey ? String(res.error) : ('生成失败：' + String(res.error || '').split('\n').pop());
       return;
     }
-    status.textContent = '完成！新增 ' + (res.added || 0) + ' 条要点，原始聊天记录已删除喵';
+    const skipped = Number(res.skipped) || 0;
+    status.textContent = skipped
+      ? ('完成！新增 ' + (res.added || 0) + ' 条要点，另外 ' + skipped + ' 条跟已有的重复、已跳过喵')
+      : ('完成！新增 ' + (res.added || 0) + ' 条要点，原始聊天记录已删除喵');
     const data = await window.digest.load();
     state.points = data.points || [];
     state.config = data.config || state.config;

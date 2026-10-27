@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:1920px; height:1080px; overflow:hidden; background:#070A16; }
+  body { font-family:"Microsoft YaHei","Microsoft YaHei UI",sans-serif; -webkit-font-smoothing:antialiased; }
+
+  .stage { position:relative; width:1920px; height:1080px; overflow:hidden;
+    background:linear-gradient(135deg,#0A0F22 0%,#111A3C 45%,#1A2350 100%); }
+
+  .glow { position:absolute; border-radius:50%; filter:blur(90px); opacity:.55; }
+  .g1 { width:760px; height:760px; left:-180px; top:-220px; background:#2B4BFF; }
+  .g2 { width:620px; height:620px; right:-120px; top:220px; background:#1FB6FF; opacity:.30; }
+  .g3 { width:520px; height:520px; left:520px; bottom:-260px; background:#7A3BFF; opacity:.28; }
+
+  .grid { position:absolute; inset:0; opacity:.10;
+    background-image:linear-gradient(rgba(255,255,255,.7) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.7) 1px,transparent 1px);
+    background-size:80px 80px; }
+
+  .mark { position:absolute; right:70px; top:52px; font-size:22px; color:#5B6890; letter-spacing:2px; }
+
+  .left { position:absolute; left:110px; top:150px; width:820px; }
+  .tag { display:flex; align-items:center; gap:14px; font-size:26px; color:#5C8BFF; letter-spacing:3px; }
+  .tag i { display:block; width:52px; height:4px; background:#4C7DFF; border-radius:2px; }
+  h1.t { margin-top:22px; font-size:78px; line-height:1.13; font-weight:700; color:#fff; letter-spacing:1px; white-space:pre-line; }
+
+  .points { margin-top:64px; }
+  .pt { display:flex; gap:20px; margin-bottom:56px; }
+  .dot { width:14px; height:14px; border-radius:50%; background:#4C7DFF; margin-top:18px; flex:0 0 auto;
+    box-shadow:0 0 16px rgba(76,125,255,.8); }
+  .pt .k { font-size:44px; font-weight:700; color:#EDF1FF; letter-spacing:.5px; }
+  .pt .d { margin-top:12px; font-size:31px; color:#94A1C2; letter-spacing:.5px; }
+
+  .card { position:absolute; left:990px; top:248px; width:880px; height:565px; border-radius:18px;
+    background:#fff; background-repeat:no-repeat; background-size:cover; background-position:50% 30%;
+    box-shadow:0 30px 90px rgba(3,8,26,.55), 0 0 0 1px rgba(255,255,255,.14), 0 0 60px rgba(76,125,255,.22);
+    overflow:hidden; }
+
+  .bar { position:absolute; left:0; bottom:0; width:1920px; height:150px; background:linear-gradient(180deg,rgba(4,7,18,.30),rgba(4,7,18,.86)); }
+  .cap { position:absolute; left:0; right:0; bottom:40px; text-align:center; font-size:38px; color:#DCE3F6;
+    line-height:1.52; letter-spacing:.5px; padding:0 130px; }
+  .pno { position:absolute; right:64px; bottom:46px; font-size:30px; color:#5F6C90; letter-spacing:2px; }
+
+  .prog { position:absolute; left:110px; bottom:44px; width:300px; height:5px; border-radius:3px; background:rgba(255,255,255,.14); }
+  .prog i { display:block; height:5px; border-radius:3px; background:linear-gradient(90deg,#4C7DFF,#35D0FF); width:0; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="glow g1"></div><div class="glow g2"></div><div class="glow g3"></div>
+  <div class="grid"></div>
+  <div class="mark">待办 · chat-digest</div>
+
+  <div class="left">
+    <div class="tag" id="tag"><i></i><span id="tagText"></span></div>
+    <h1 class="t" id="title"></h1>
+    <div class="points" id="points"></div>
+  </div>
+
+  <div class="card" id="card"></div>
+  <div class="bar"></div>
+  <div class="cap" id="cap"></div>
+  <div class="pno" id="pno"></div>
+  <div class="prog"><i id="progFill"></i></div>
+</div>
+<script>
+  const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+
+  window.setup = function (d) {
+    document.getElementById('tagText').textContent = d.tag;
+    document.getElementById('title').textContent = d.title;
+    document.getElementById('cap').innerHTML = d.cap.split('||').join('<br>');
+    document.getElementById('pno').textContent = String(d.idx).padStart(2, '0');
+    const card = document.getElementById('card');
+    card.style.backgroundSize = (d.zoom * 100) + '% auto';
+    card.style.backgroundPosition = d.focus;
+    window._imgReady = new Promise(function (res) {
+      const im = new Image();
+      im.onload = function () { card.style.backgroundImage = 'url(' + d.img + ')'; res(true); };
+      im.onerror = function () { res(false); };
+      im.src = d.img;
+    });
+    const box = document.getElementById('points');
+    box.innerHTML = d.points.map(p => '<div class="pt"><span class="dot"></span><div><div class="k">' + p[0] + '</div><div class="d">' + p[1] + '</div></div></div>').join('');
+    window._d = d;
+    return window._imgReady;
+  };
+
+  window.setT = function (t) {
+    const d = window._d;
+    document.getElementById('tag').style.opacity = ease((t - 0.05) / 0.45);
+    const ti = ease((t - 0.20) / 0.55);
+    document.getElementById('title').style.opacity = ti;
+    document.getElementById('title').style.transform = 'translateY(' + (24 * (1 - ti)) + 'px)';
+    const cardEl = document.getElementById('card');
+    const ct = ease((t - 0.10) / 0.75);
+    cardEl.style.opacity = ct;
+    cardEl.style.transform = 'scale(' + (0.965 + 0.035 * ct) + ') translateY(' + (18 * (1 - ct)) + 'px)';
+    const pts = document.querySelectorAll('.pt');
+    pts.forEach((el, i) => {
+      const k = ease((t - (0.55 + i * 0.26)) / 0.5);
+      el.style.opacity = k;
+      el.style.transform = 'translateY(' + (22 * (1 - k)) + 'px)';
+    });
+    document.getElementById('cap').style.opacity = ease((t - 0.3) / 0.5);
+    const p = Math.min(1, t / d.dur);
+    document.getElementById('progFill').style.width = (p * 100) + '%';
+  };
+</script>
+</body>
+</html>

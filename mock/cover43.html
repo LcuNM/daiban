@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:1200px; height:900px; overflow:hidden; background:#FBFBF9; }
+  body { font-family:"Microsoft YaHei","Microsoft YaHei UI",sans-serif; -webkit-font-smoothing:antialiased; }
+  .stage { position:relative; width:1200px; height:900px; overflow:hidden; background:#FBFBF9; }
+  .grid { position:absolute; inset:0;
+    background-image:linear-gradient(#F1F0EB 1px,transparent 1px),linear-gradient(90deg,#F1F0EB 1px,transparent 1px);
+    background-size:56px 56px; }
+  .hero { position:absolute; right:-30px; bottom:0; height:760px; }
+  .hero img { height:100%; display:block; mix-blend-mode:multiply;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 16%,#000 100%); }
+  .tag { position:absolute; left:70px; top:132px; font-size:26px; color:#12A08A; font-weight:700; }
+  h1 { position:absolute; left:64px; top:186px; font-size:104px; line-height:1; font-weight:900; color:#000; letter-spacing:0px; }
+  .sub { position:absolute; left:68px; top:330px; font-size:56px; line-height:1; font-weight:700; color:#333; }
+  .feat { position:absolute; left:68px; top:424px; font-size:34px; color:#7A8290; letter-spacing:4px; }
+  .hr { position:absolute; left:70px; top:760px; width:560px; height:1px; background:#DDDCD6; }
+  .nav { position:absolute; left:70px; top:784px; font-size:20px; color:#9AA1AE; letter-spacing:1px; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="grid"></div>
+  <div class="hero"><img src="out/whale_full.png" alt=""></div>
+  <div class="tag">待办 · chat-digest</div>
+  <h1>群聊变要点</h1>
+  <div class="sub">一键总结，只留要点</div>
+  <div class="feat">会整理　会分类　读完就删</div>
+  <div class="hr"></div>
+  <div class="nav">为什么做 · 怎么用 · 界面 · 隐私 · 开源</div>
+</div>
+</body>
+</html>

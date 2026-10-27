@@ -37,6 +37,40 @@ function writeJson(file, value) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, JSON.stringify(value, null, 2), 'utf8');
 }
+/** 标题指纹：去掉空白和标点、转小写，用来判断是不是同一条要点 */
+function normalizeKey(text) {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/[\s\u3000]+/g, '')
+    .replace(/[，。、！？：；,.!?:;'"“”‘’()（）【】\[\]<>《》\-—_\u002f\\|~·…]/g, '');
+}
+
+/** 字符集合相似度：抓「提交证件复印件」和「证件复印件提交」这种打乱语序的同一条 */
+function keySimilarity(a, b) {
+  const setA = new Set(String(a || '').split(''));
+  const setB = new Set(String(b || '').split(''));
+  if (!setA.size || !setB.size) return 0;
+  let hit = 0;
+  for (const ch of setA) if (setB.has(ch)) hit++;
+  return hit / Math.max(setA.size, setB.size);
+}
+
+/** 两条要点算不算同一件事：完全相同 / 互相包含（都≥3字）/ 字符相似度≥0.7（都≥4字） */
+function sameTitle(a, b) {
+  const key = normalizeKey(a);
+  const other = normalizeKey(b);
+  if (!key || !other) return false;
+  if (key === other) return true;
+  if (key.length >= 3 && other.length >= 3 && (key.includes(other) || other.includes(key))) return true;
+  if (key.length >= 4 && other.length >= 4 && keySimilarity(key, other) >= 0.7) return true;
+  return false;
+}
+
+/** 标题是不是已经存在（用来去重：同一件事只留一条） */
+function alreadyHave(title, titles) {
+  return (titles || []).some((t) => sameTitle(title, t));
+}
+
 function loadConfig() {
   const cfg = Object.assign({}, DEFAULTS, readJson(CONFIG, {}));
   if (!fs.existsSync(cfg.python)) cfg.python = DEFAULTS.python;
@@ -186,11 +220,17 @@ function cmdCommit(args) {
   let nextIndex = points.reduce((m, p) => Math.max(m, Number(p.index) || 0), 0) + 1;
   const now = new Date().toISOString();
   const added = [];
+  // 去重：列表里已经有的要点不再写回来（同一批里撞车的也只留第一条）
+  const knownTitles = points.map((p) => p.title).filter(Boolean);
+  let skippedDup = 0;
   for (const item of incoming) {
+    const title = item.title || summarizeBody(item.body);
+    if (alreadyHave(title, knownTitles)) { skippedDup++; continue; }
+    knownTitles.push(title);
     const entry = {
       id: 'p' + Date.now() + '_' + nextIndex,
       index: nextIndex,
-      title: item.title || summarizeBody(item.body),
+      title,
       group: item.group || '',
       date: item.date || now.slice(0, 10),
       category: item.category || '其他',
@@ -226,6 +266,7 @@ function cmdCommit(args) {
   writeJson(CONFIG, cfg);
 
   console.log('ADDED=' + added.length);
+  if (skippedDup) console.log('SKIPPED=' + skippedDup + '（跟已有要点重复，已跳过）');
   added.forEach((a) => console.log(' + ' + a));
   console.log('CLEANED=' + removed.length + ' 项（原始聊天记录已删除）');
   return 0;
