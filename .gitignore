@@ -1,0 +1,16 @@
+# 数据（聊天记录、AI 密钥，绝不上传）
+data/
+*.log
+pending.json
+
+# 运行环境（体积大、跟本机绑死，自己建）
+runtime/
+node_modules/
+
+# 备份
+*.bak*
+*.bak-before-*
+
+# 系统
+Thumbs.db
+.DS_Store

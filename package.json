@@ -1,0 +1,6 @@
+{
+  "name": "chat-digest",
+  "version": "1.0.0",
+  "description": "群聊每日要点总结",
+  "main": "main.js"
+}
